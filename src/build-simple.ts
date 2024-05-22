@@ -45,7 +45,10 @@ const getJSRangeRegex = (variable: string) =>
 const getJSOnlyRegex = (variable: string) =>
   new RegExp(`^.*\/\/ BOLT_${variable}_ONLY.*(\n|\r\n)?`, "gm");
 
-const allCommentsRegex = /\/\/ BOLT_.*_(START|END|ONLY).*(\n|\r\n)?/gm;
+const getJSReplaceRegex = (variable: string) =>
+  new RegExp(`^.*\/\/ BOLT_${variable}_REPLACE.*(\n|\r\n)?`, "gm");
+
+const allCommentsRegex = /\/\/ BOLT_.*_(START|END|ONLY|REPLACE).*(\n|\r\n)?/gm;
 
 const getJSXRegex = (variable: string) =>
   new RegExp(
@@ -54,7 +57,7 @@ const getJSXRegex = (variable: string) =>
   );
 
 const allJSXCommentsRegex =
-  /\{\/\* BOLT_.*_(START|END|ONLY) \*\/\}.*(\n|\r\n)?/gm;
+  /\{\/\* BOLT_.*_(START|END|ONLY|REPLACE) \*\/\}.*(\n|\r\n)?/gm;
 
 const getHTMLRegex = (variable: string) =>
   new RegExp(
@@ -62,7 +65,8 @@ const getHTMLRegex = (variable: string) =>
     "g"
   );
 
-const allHTMLCommentsRegex = /<!-- BOLT_.*_(START|END|ONLY) -->.*(\n|\r\n)?/gm;
+const allHTMLCommentsRegex =
+  /<!-- BOLT_.*_(START|END|ONLY|REPLACE) -->.*(\n|\r\n)?/gm;
 const htmlDisabledScriptTagRegexStart = /<!-- <script/g;
 const htmlDisabledScriptTagRegexEnd = /<\/script> -->.*/g;
 
@@ -87,13 +91,37 @@ const formatFile = async (
   txt: string,
   ext: string,
   keywordsIncludes: string[],
-  keywordsExcludes: string[]
+  keywordsExcludes: string[],
+  args: ResArgs
 ) => {
+  // remove excluded keywords
   keywordsExcludes.map((keyword) => {
     const upper = keyword.toUpperCase();
     txt = replaceAll(txt, upper, "");
   });
-  // cleanup
+
+  // inject replace values
+  Object.keys(args).map((key) => {
+    const value = args[key];
+    const upper = key.toUpperCase();
+    const rangeReplaceJS = getJSReplaceRegex(upper);
+    const matches = txt.match(rangeReplaceJS);
+    if (matches) {
+      matches.map((match) => {
+        const stringRegex = /(\".*\")|(\'.*\')/g;
+        const oldStringMatches = match.match(stringRegex);
+        if (oldStringMatches) {
+          const oldString = oldStringMatches[0];
+          const quotation = oldString[0];
+          const newString = `${quotation}${value}${quotation}`;
+          const newMatch = match.replace(oldString, newString);
+          txt = txt.replace(match, newMatch);
+        }
+      });
+    }
+  });
+
+  // cleanup all remaining bolt comments
   txt = txt.replace(allCommentsRegex, "");
   txt = txt.replace(allHTMLCommentsRegex, "");
   txt = txt.replace(allJSXCommentsRegex, "");
@@ -215,8 +243,11 @@ export const buildBolt = async (
         txt,
         ext,
         keywordIncludes,
-        keywordExcludes
+        keywordExcludes,
+        args
       );
+
+      // TODO: Update replace feature for ID, Display Name, etc.
 
       // wite file if changed
       if (newTxt !== txt) {
