@@ -1,5 +1,5 @@
 {
-  "name": "bolt-template",
+  "name": "meta-bolt",
   "version": "0.1.25",
   "license": "MIT",
   "bin": {
