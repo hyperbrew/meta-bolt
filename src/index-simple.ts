@@ -85,6 +85,7 @@ export type BoltInitData = {
 };
 export type ResArgs = {
   folder: string;
+  framework: string;
   [key: string]: string | boolean | string[];
 };
 
@@ -97,6 +98,7 @@ export const main = async (initData: BoltInitData, params: OptionalArgs) => {
   // const cliArgs = await parseArgs(argsTemplate);
   let resArgs: ResArgs = {
     folder: "",
+    framework: "",
   };
   for (const arg of argsTemplate) {
     // console.log(arg);

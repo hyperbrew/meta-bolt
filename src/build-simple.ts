@@ -6,7 +6,7 @@ import * as color from "picocolors";
 import { execAsync, getPackageManager, posix } from "./utils";
 import { spinner, note } from "@clack/prompts";
 
-import { capitalize, replace } from "radash";
+import { capitalize, isArray, replace } from "radash";
 import { BaseInfo, BoltInitData, IntroData, ResArgs } from "./index-simple";
 
 export type Args = {
@@ -86,28 +86,13 @@ const replaceAll = (txt: string, variable: string, replace: string) => {
 const formatFile = async (
   txt: string,
   ext: string,
-  {
-    enableHybrid,
-    keepSampleCode,
-    removeApps,
-    removeFrameworks,
-  }: {
-    enableHybrid: boolean;
-    keepSampleCode: boolean;
-    removeApps: string[];
-    removeFrameworks: string[];
-  }
+  keywordsIncludes: string[],
+  keywordsExcludes: string[]
 ) => {
-  [...removeApps, ...removeFrameworks].map((app) => {
-    const upper = app.toUpperCase();
+  keywordsExcludes.map((keyword) => {
+    const upper = keyword.toUpperCase();
     txt = replaceAll(txt, upper, "");
   });
-  if (!enableHybrid) {
-    txt = replaceAll(txt, "HYBRID", "");
-  }
-  if (!keepSampleCode) {
-    txt = replaceAll(txt, "SAMPLECODE", "");
-  }
   // cleanup
   txt = txt.replace(allCommentsRegex, "");
   txt = txt.replace(allHTMLCommentsRegex, "");
@@ -133,6 +118,7 @@ export const buildBolt = async (
   args: ResArgs
 ) => {
   if (!args.folder) throw Error("Folder not provided");
+  if (!args.framework) throw Error("Folder not provided");
 
   const fullPath = path.join(process.cwd(), args.folder);
   note(
@@ -157,7 +143,12 @@ export const buildBolt = async (
   initData.argsTemplate.map((argTmp) => {
     if (argTmp.type === "select" || argTmp.type === "multiselect") {
       argTmp.options.map((opt) => {
-        if (args[argTmp.name] === opt.value) {
+        const selected = args[argTmp.name];
+        const current = opt.value.toLowerCase();
+        if (
+          (typeof selected === "string" && selected === current) ||
+          (isArray(selected) && selected.includes(current))
+        ) {
           fileIncludes = [...fileIncludes, ...opt.files];
           keywordIncludes = [...keywordIncludes, opt.value.toUpperCase()];
         } else {
@@ -205,12 +196,6 @@ export const buildBolt = async (
 
   console.log({ files });
 
-  const allApps = appOptions.map((app) => app.value);
-  const removeApps = allApps.filter((app) => !args.apps.includes(app));
-  const removeFrameworks = frameworkOptions
-    .filter((f) => f.value !== args.framework)
-    .map((f) => f.value);
-
   for (const file of files) {
     const fileName = file.replace(stem, "");
     const dest = path.join(fullPath, fileName);
@@ -220,17 +205,18 @@ export const buildBolt = async (
       fs.cpSync(file, dest, {
         recursive: true,
       });
+      // todo might need recursion here instead of if/else for file/folder
     } else {
       fs.copyFileSync(file, dest);
       const txt = fs.readFileSync(dest, "utf8");
       const ext = path.extname(dest);
 
-      const newTxt = await formatFile(txt, ext, {
-        enableHybrid: args.enableHybrid || false,
-        keepSampleCode: args.keepSampleCode || false,
-        removeApps,
-        removeFrameworks,
-      });
+      const newTxt = await formatFile(
+        txt,
+        ext,
+        keywordIncludes,
+        keywordExcludes
+      );
 
       // wite file if changed
       if (newTxt !== txt) {
@@ -259,17 +245,6 @@ export const buildBolt = async (
     "utf8"
   );
 
-  //* update uxp.config.ts
-  const uxpConfig = path.join(fullPath, "uxp.config.ts");
-  let uxpConfigData = fs.readFileSync(uxpConfig, "utf8");
-  uxpConfigData = uxpConfigData
-    // update name
-    .replace(/name: \".*\",/, `name: "${args.displayName}",`)
-    .replace(/default: \".*\",/, `default: "${args.displayName}",`)
-    // update ids
-    .replace(/bolt\.uxp\.plugin/g, args.id);
-  fs.writeFileSync(uxpConfig, uxpConfigData, "utf8");
-
   const pm = getPackageManager() || "npm";
   // * Dependencies
   if (args.installDeps) {
@@ -279,22 +254,14 @@ export const buildBolt = async (
     s.stop("Dependencies installed!");
   }
 
-  note(
-    [
-      `display name   ${args.displayName}`,
-      `id             ${args.id}`,
-      `framework      ${args.framework}`,
-      `apps           ${args.apps}`,
-      `hybrid         ${args.enableHybrid}`,
-      `sample code    ${args.keepSampleCode}`,
-      `deps           ${args.installDeps}`,
-    ].join("\n"),
-    "Inputs"
-  );
+  const noteStr = Object.keys(args).map((key) => {
+    const value = args[key];
+    return `${key} ${value.toString()}`;
+  });
+  note(noteStr.join("\n"), "Inputs");
 
   let summary = [
-    `Bolt UXP generated with ${capitalize(args?.framework)}` +
-      `: ${color.green(color.bold(fullPath))}`,
+    `${intro.prettyName} generated` + `: ${color.green(color.bold(fullPath))}`,
   ];
   if (!args.installDeps) {
     summary = [
