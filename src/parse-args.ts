@@ -1,7 +1,7 @@
 import * as color from "picocolors";
 import * as yargs from "yargs";
 
-import type { Args } from "./build";
+import type { Args } from "./build-old";
 import {
   appOptions,
   appValues,
@@ -10,7 +10,7 @@ import {
 } from "./data";
 
 import { parsePath } from "./parse-path";
-import type { BoltInitData, ArgTemplate } from "./index-simple";
+import type { BoltInitData, ArgTemplate } from ".";
 
 export async function parseArgs(argsTemplate: ArgTemplate[]): Promise<Args> {
   let argv = yargs.usage("Usage: $0 <appname> [options]").positional("folder", {

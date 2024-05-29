@@ -3,19 +3,11 @@ import * as fs from "fs";
 import * as fg from "fast-glob";
 import * as color from "picocolors";
 
-import * as prettier from "prettier";
-
-import {
-  appOptions,
-  frameworkOptions,
-  globalExcludes,
-  globalIncludes,
-  hybridFiles,
-} from "./data";
 import { execAsync, getPackageManager, posix } from "./utils";
 import { spinner, note } from "@clack/prompts";
 
-import { capitalize, replace } from "radash";
+import { capitalize, isArray, replace } from "radash";
+import { BaseInfo, BoltInitData, IntroData, ResArgs } from ".";
 
 export type Args = {
   folder: string;
@@ -47,31 +39,34 @@ const multiBlankLineRegex = /(\r?\n\s*){1,}/g;
 
 const getJSRangeRegex = (variable: string) =>
   new RegExp(
-    `\/\/ BOLT-UXP_${variable}_START[\\s\\S]*?\/\/ BOLT-UXP_${variable}_END.*(\n|\r\n)?`,
+    `\/\/ BOLT_${variable}_START[\\s\\S]*?\/\/ BOLT_${variable}_END.*(\n|\r\n)?`,
     "gm"
   );
 const getJSOnlyRegex = (variable: string) =>
-  new RegExp(`^.*\/\/ BOLT-UXP_${variable}_ONLY.*(\n|\r\n)?`, "gm");
+  new RegExp(`^.*\/\/ BOLT_${variable}_ONLY.*(\n|\r\n)?`, "gm");
 
-const allCommentsRegex = /\/\/ BOLT-UXP_.*_(START|END|ONLY).*(\n|\r\n)?/gm;
+const getJSReplaceRegex = (variable: string) =>
+  new RegExp(`^.*\/\/ BOLT_${variable}_REPLACE.*(\n|\r\n)?`, "gm");
+
+const allCommentsRegex = /\/\/ BOLT_.*_(START|END|ONLY|REPLACE).*(\n|\r\n)?/gm;
 
 const getJSXRegex = (variable: string) =>
   new RegExp(
-    `\\{\\/\\* BOLT-UXP_${variable}_START \\*\\/\\}([\\s\\S]*?)\\{\\/\\* BOLT-UXP_${variable}_END \\*\\/\\}.*`,
+    `\\{\\/\\* BOLT_${variable}_START \\*\\/\\}([\\s\\S]*?)\\{\\/\\* BOLT_${variable}_END \\*\\/\\}.*`,
     "gm"
   );
 
 const allJSXCommentsRegex =
-  /\{\/\* BOLT-UXP_.*_(START|END|ONLY) \*\/\}.*(\n|\r\n)?/gm;
+  /\{\/\* BOLT_.*_(START|END|ONLY|REPLACE) \*\/\}.*(\n|\r\n)?/gm;
 
 const getHTMLRegex = (variable: string) =>
   new RegExp(
-    `<!-- BOLT-UXP_${variable}_START -->[\\s\\S]*?<!-- BOLT-UXP_${variable}_END -->.*`,
+    `<!-- BOLT_${variable}_START -->[\\s\\S]*?<!-- BOLT_${variable}_END -->.*`,
     "g"
   );
 
 const allHTMLCommentsRegex =
-  /<!-- BOLT-UXP_.*_(START|END|ONLY) -->.*(\n|\r\n)?/gm;
+  /<!-- BOLT_.*_(START|END|ONLY|REPLACE) -->.*(\n|\r\n)?/gm;
 const htmlDisabledScriptTagRegexStart = /<!-- <script/g;
 const htmlDisabledScriptTagRegexEnd = /<\/script> -->.*/g;
 
@@ -95,29 +90,38 @@ const replaceAll = (txt: string, variable: string, replace: string) => {
 const formatFile = async (
   txt: string,
   ext: string,
-  {
-    enableHybrid,
-    keepSampleCode,
-    removeApps,
-    removeFrameworks,
-  }: {
-    enableHybrid: boolean;
-    keepSampleCode: boolean;
-    removeApps: string[];
-    removeFrameworks: string[];
-  }
+  keywordsIncludes: string[],
+  keywordsExcludes: string[],
+  args: ResArgs
 ) => {
-  [...removeApps, ...removeFrameworks].map((app) => {
-    const upper = app.toUpperCase();
+  // remove excluded keywords
+  keywordsExcludes.map((keyword) => {
+    const upper = keyword.toUpperCase();
     txt = replaceAll(txt, upper, "");
   });
-  if (!enableHybrid) {
-    txt = replaceAll(txt, "HYBRID", "");
-  }
-  if (!keepSampleCode) {
-    txt = replaceAll(txt, "SAMPLECODE", "");
-  }
-  // cleanup
+
+  // inject replace values
+  Object.keys(args).map((key) => {
+    const value = args[key];
+    const upper = key.toUpperCase();
+    const rangeReplaceJS = getJSReplaceRegex(upper);
+    const matches = txt.match(rangeReplaceJS);
+    if (matches) {
+      matches.map((match) => {
+        const stringRegex = /(\".*\")|(\'.*\')/g;
+        const oldStringMatches = match.match(stringRegex);
+        if (oldStringMatches) {
+          const oldString = oldStringMatches[0];
+          const quotation = oldString[0];
+          const newString = `${quotation}${value}${quotation}`;
+          const newMatch = match.replace(oldString, newString);
+          txt = txt.replace(match, newMatch);
+        }
+      });
+    }
+  });
+
+  // cleanup all remaining bolt comments
   txt = txt.replace(allCommentsRegex, "");
   txt = txt.replace(allHTMLCommentsRegex, "");
   txt = txt.replace(allJSXCommentsRegex, "");
@@ -135,44 +139,82 @@ const formatFile = async (
   return txt;
 };
 
-export const buildBoltUXP = async (args: Args) => {
+export const buildBolt = async (
+  intro: IntroData,
+  initData: BoltInitData,
+  base: BaseInfo,
+  args: ResArgs
+) => {
+  if (!args.folder) throw Error("Folder not provided");
+  if (!args.framework) throw Error("Folder not provided");
+
   const fullPath = path.join(process.cwd(), args.folder);
-  note(`Creating Bolt UXP in ${color.green(color.bold(fullPath))}`, "Info");
+  note(
+    `Creating ${intro.prettyName} in ${color.green(color.bold(fullPath))}`,
+    "Info"
+  );
 
   const localStem = posix(
-    path.join(__dirname, "..", `/node_modules/bolt-uxp/`)
+    path.join(__dirname, "..", `/node_modules/${base.module}/`)
   );
-  const globalStem = posix(path.join(__dirname, `../../bolt-uxp`));
+  const globalStem = posix(path.join(__dirname, `../../${base.module}`));
   const stem = fs.existsSync(globalStem) ? globalStem : localStem;
 
   if (fs.existsSync(fullPath)) fs.rmSync(fullPath, { recursive: true });
   fs.mkdirSync(fullPath, { recursive: true });
 
-  let includes = [...globalIncludes];
-  let excludes = [...globalExcludes];
+  let fileIncludes = [...base.globalIncludes];
+  let fileExcludes = [...base.globalExcludes];
+  let keywordIncludes: string[] = [];
+  let keywordExcludes: string[] = [];
 
-  excludes = [
-    ...excludes,
-    ...frameworkOptions
-      .filter((f) => f.value !== args.framework)
-      .map((f) => f.files)
-      .flat(),
-    ...appOptions
-      .filter((f) => !args.apps.includes(f.value))
-      .map((f) => f.files)
-      .flat(),
-  ];
-
-  if (args.enableHybrid) {
-    includes = [...includes, ...hybridFiles];
-  } else {
-    excludes = [...excludes, ...hybridFiles];
-  }
+  initData.argsTemplate.map((argTmp) => {
+    if (argTmp.type === "select" || argTmp.type === "multiselect") {
+      argTmp.options.map((opt) => {
+        const selected = args[argTmp.name];
+        const current = opt.value.toLowerCase();
+        if (
+          (typeof selected === "string" && selected === current) ||
+          (isArray(selected) && selected.includes(current))
+        ) {
+          fileIncludes = [...fileIncludes, ...opt.files];
+          keywordIncludes = [...keywordIncludes, opt.value.toUpperCase()];
+        } else {
+          fileExcludes = [...fileExcludes, ...opt.files];
+          keywordExcludes = [...keywordExcludes, opt.value.toUpperCase()];
+        }
+      });
+    }
+    if (argTmp.type === "boolean") {
+      const value = args[argTmp.name];
+      keywordIncludes = [...keywordIncludes, argTmp.name.toUpperCase()];
+      if (argTmp.options) {
+        const trueOpt = argTmp.options.find((o) => o.value === "true");
+        const fasleOpt = argTmp.options.find((o) => o.value === "false");
+        if (trueOpt && fasleOpt) {
+          if (value) {
+            fileIncludes = [...fileIncludes, ...trueOpt.files];
+            fileExcludes = [...fileExcludes, ...fasleOpt.files];
+          } else {
+            fileIncludes = [...fileIncludes, ...fasleOpt.files];
+            fileExcludes = [...fileExcludes, ...trueOpt.files];
+          }
+        }
+      }
+      keywordIncludes = [...keywordIncludes, argTmp.name.toUpperCase()];
+    }
+  });
+  console.log({
+    fileIncludes,
+    fileExcludes,
+    keywordIncludes,
+    keywordExcludes,
+  });
 
   const files = await fg(
     [
-      ...includes.map((i) => posix(path.join(stem, i))),
-      ...excludes.map((i) => `!` + posix(path.join(stem, i))),
+      ...fileIncludes.map((i) => posix(path.join(stem, i))),
+      ...fileExcludes.map((i) => `!` + posix(path.join(stem, i))),
     ],
     {
       onlyFiles: true,
@@ -180,11 +222,7 @@ export const buildBoltUXP = async (args: Args) => {
     }
   );
 
-  const allApps = appOptions.map((app) => app.value);
-  const removeApps = allApps.filter((app) => !args.apps.includes(app));
-  const removeFrameworks = frameworkOptions
-    .filter((f) => f.value !== args.framework)
-    .map((f) => f.value);
+  console.log({ files });
 
   for (const file of files) {
     const fileName = file.replace(stem, "");
@@ -195,17 +233,21 @@ export const buildBoltUXP = async (args: Args) => {
       fs.cpSync(file, dest, {
         recursive: true,
       });
+      // todo might need recursion here instead of if/else for file/folder
     } else {
       fs.copyFileSync(file, dest);
       const txt = fs.readFileSync(dest, "utf8");
       const ext = path.extname(dest);
 
-      const newTxt = await formatFile(txt, ext, {
-        enableHybrid: args.enableHybrid || false,
-        keepSampleCode: args.keepSampleCode || false,
-        removeApps,
-        removeFrameworks,
-      });
+      const newTxt = await formatFile(
+        txt,
+        ext,
+        keywordIncludes,
+        keywordExcludes,
+        args
+      );
+
+      // TODO: Update replace feature for ID, Display Name, etc.
 
       // wite file if changed
       if (newTxt !== txt) {
@@ -234,17 +276,6 @@ export const buildBoltUXP = async (args: Args) => {
     "utf8"
   );
 
-  //* update uxp.config.ts
-  const uxpConfig = path.join(fullPath, "uxp.config.ts");
-  let uxpConfigData = fs.readFileSync(uxpConfig, "utf8");
-  uxpConfigData = uxpConfigData
-    // update name
-    .replace(/name: \".*\",/, `name: "${args.displayName}",`)
-    .replace(/default: \".*\",/, `default: "${args.displayName}",`)
-    // update ids
-    .replace(/bolt\.uxp\.plugin/g, args.id);
-  fs.writeFileSync(uxpConfig, uxpConfigData, "utf8");
-
   const pm = getPackageManager() || "npm";
   // * Dependencies
   if (args.installDeps) {
@@ -254,22 +285,14 @@ export const buildBoltUXP = async (args: Args) => {
     s.stop("Dependencies installed!");
   }
 
-  note(
-    [
-      `display name   ${args.displayName}`,
-      `id             ${args.id}`,
-      `framework      ${args.framework}`,
-      `apps           ${args.apps}`,
-      `hybrid         ${args.enableHybrid}`,
-      `sample code    ${args.keepSampleCode}`,
-      `deps           ${args.installDeps}`,
-    ].join("\n"),
-    "Inputs"
-  );
+  const noteStr = Object.keys(args).map((key) => {
+    const value = args[key];
+    return `${key} ${value.toString()}`;
+  });
+  note(noteStr.join("\n"), "Inputs");
 
   let summary = [
-    `Bolt UXP generated with ${capitalize(args?.framework)}` +
-      `: ${color.green(color.bold(fullPath))}`,
+    `${intro.prettyName} generated` + `: ${color.green(color.bold(fullPath))}`,
   ];
   if (!args.installDeps) {
     summary = [
