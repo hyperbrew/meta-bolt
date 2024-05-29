@@ -7,33 +7,19 @@ import { execAsync, getPackageManager, posix } from "./utils";
 import { spinner, note } from "@clack/prompts";
 
 import { capitalize, isArray, replace } from "radash";
-import { BaseInfo, BoltInitData, IntroData, ResArgs } from ".";
 
-export type Args = {
-  folder: string;
-  displayName: string;
-  id: string;
-  framework: string;
-  apps: string[];
-  enableHybrid: boolean | undefined;
-  keepSampleCode: boolean | undefined;
-  installDeps: boolean | undefined;
-  pretty?: boolean;
-  verbose?: boolean;
-};
-
-export type OptionalArgs = {
-  folder?: string;
-  displayName?: string;
-  id?: string;
-  framework?: string;
-  apps?: string[];
-  enableHybrid?: boolean;
-  keepSampleCode?: boolean;
-  installDeps?: boolean;
-  pretty?: boolean;
-  verbose?: boolean;
-};
+import type {
+  IntroData,
+  ArgOpt,
+  ArgTemplateGeneric,
+  ArgTemplateBoolean,
+  ArgTemplateString,
+  ArgTemplateSelect,
+  ArgTemplateTypes,
+  BaseInfo,
+  BoltInitData,
+  ResArgs,
+} from "./types";
 
 const multiBlankLineRegex = /(\r?\n\s*){1,}/g;
 
@@ -204,12 +190,12 @@ export const buildBolt = async (
       keywordIncludes = [...keywordIncludes, argTmp.name.toUpperCase()];
     }
   });
-  console.log({
-    fileIncludes,
-    fileExcludes,
-    keywordIncludes,
-    keywordExcludes,
-  });
+  // console.log({
+  //   fileIncludes,
+  //   fileExcludes,
+  //   keywordIncludes,
+  //   keywordExcludes,
+  // });
 
   const files = await fg(
     [
@@ -222,7 +208,7 @@ export const buildBolt = async (
     }
   );
 
-  console.log({ files });
+  // console.log({ files });
 
   for (const file of files) {
     const fileName = file.replace(stem, "");
