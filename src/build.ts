@@ -172,8 +172,14 @@ export const buildBolt = async (
       });
     }
     if (argTmp.type === "boolean") {
-      const value = args[argTmp.name];
-      keywordIncludes = [...keywordIncludes, argTmp.name.toUpperCase()];
+      const argName = argTmp.name;
+      const argNameUpper = argName.toUpperCase();
+      const value = args[argName];
+      if (value) {
+        keywordIncludes = [...keywordIncludes, argNameUpper];
+      } else {
+        keywordExcludes = [...keywordExcludes, argNameUpper];
+      }
       if (argTmp.options) {
         const trueOpt = argTmp.options.find((o) => o.value === "true");
         const fasleOpt = argTmp.options.find((o) => o.value === "false");
@@ -187,15 +193,14 @@ export const buildBolt = async (
           }
         }
       }
-      keywordIncludes = [...keywordIncludes, argTmp.name.toUpperCase()];
     }
   });
-  // console.log({
-  //   fileIncludes,
-  //   fileExcludes,
-  //   keywordIncludes,
-  //   keywordExcludes,
-  // });
+  console.log({
+    fileIncludes,
+    fileExcludes,
+    keywordIncludes,
+    keywordExcludes,
+  });
 
   const files = await fg(
     [
@@ -208,7 +213,7 @@ export const buildBolt = async (
     }
   );
 
-  // console.log({ files });
+  console.log({ files });
 
   for (const file of files) {
     const fileName = file.replace(stem, "");

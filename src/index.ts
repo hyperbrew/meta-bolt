@@ -27,7 +27,7 @@ import type {
   ResArgs,
 } from "./types";
 
-export type { BoltInitData };
+export type { BoltInitData, ArgOpt };
 
 const handleCancel = (value: unknown) => {
   if (isCancel(value)) {
@@ -38,6 +38,7 @@ const handleCancel = (value: unknown) => {
 
 export const main = async (initData: BoltInitData) => {
   console.clear();
+  // console.log({ base: initData.base });
 
   const { intro, base, argsTemplate } = initData;
   boltIntro(intro);
