@@ -52,7 +52,7 @@ const getHTMLRegex = (variable: string) =>
   );
 
 const allHTMLCommentsRegex =
-  /<!-- BOLT_.*_(START|END|ONLY|REPLACE) -->.*(\n|\r\n)?/gm;
+  /<!-- BOLT_.*_(START|END|ONLY|REPLACE).*-->.*(\n|\r\n)?/gm;
 const htmlDisabledScriptTagRegexStart = /<!-- <script/g;
 const htmlDisabledScriptTagRegexEnd = /<\/script> -->.*/g;
 
@@ -112,8 +112,6 @@ const formatFile = async (
   txt = txt.replace(allHTMLCommentsRegex, "");
   txt = txt.replace(allJSXCommentsRegex, "");
   if (ext === ".html") {
-    txt = txt.replace("<!-- Uncomment to debug the desired template -->", "");
-    // txt = txt.replace(multiBlankLineRegex, "\n");
     // re-enable all disabled <script /> tags
     txt = txt
       .replace(htmlDisabledScriptTagRegexStart, "<script")
