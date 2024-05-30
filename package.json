@@ -28,6 +28,7 @@
     "@clack/prompts": "^0.7.0",
     "@types/prettier": "^3.0.0",
     "@types/resolve-dir": "^0.0.0",
+    "archiver": "^7.0.1",
     "bolt-uxp": "^0.1.25",
     "execa": "^5.1.1",
     "fast-glob": "^3.3.2",
@@ -42,6 +43,7 @@
     "yargs": "^17.4.0"
   },
   "devDependencies": {
+    "@types/archiver": "^6.0.2",
     "@types/fs-extra": "^9.0.13",
     "@types/node": "^17.0.23",
     "@types/yargs": "^17.0.10"

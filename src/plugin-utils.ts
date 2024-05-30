@@ -10,6 +10,9 @@ import {
   unlinkSync,
 } from "fs";
 import { join } from "path";
+import { zipPackage } from "./zip";
+
+export { zipPackage };
 
 type PackageJSON = {
   name: string;
