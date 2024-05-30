@@ -14,7 +14,7 @@ import {
 } from "@clack/prompts";
 import { buildBolt } from "./build";
 
-// import { parseArgs } from "./parse-args";
+import { parseArgs } from "./parse-args";
 
 import type {
   IntroData,
@@ -49,14 +49,14 @@ export const main = async (initData: BoltInitData) => {
   const { intro, base, argsTemplate } = initData;
   boltIntro(intro);
 
-  // const cliArgs = await parseArgs(argsTemplate);
-  let resArgs: ResArgs = {
-    folder: "",
-    framework: "",
-  };
+  const cliArgs: ResArgs = await parseArgs(argsTemplate);
+
+  let promptArgs: ResArgs = {};
   for (const arg of argsTemplate) {
-    // console.log(arg);
-    // TODO handle CLI
+    if (typeof cliArgs[arg.name] !== "undefined") {
+      continue;
+    }
+
     let res;
     if (arg.type === "folder" || arg.type === "string") {
       res = (await text({
@@ -108,11 +108,19 @@ export const main = async (initData: BoltInitData) => {
       }
     }
     if (res) {
-      resArgs[arg.name] = res;
+      promptArgs[arg.name] = res;
     }
   }
-  await buildBolt(intro, initData, base, resArgs);
-  return resArgs;
+
+  const finalArgs: ResArgs = { ...cliArgs, ...promptArgs };
+  // console.log({
+  //   cliArgs,
+  //   promptArgs,
+  //   finalArgs,
+  // });
+
+  await buildBolt(intro, initData, base, finalArgs);
+  return finalArgs;
 };
 
 function boltIntro(args: IntroData) {

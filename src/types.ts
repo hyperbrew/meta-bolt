@@ -62,7 +62,5 @@ export type BoltInitData = {
   argsTemplate: ArgTemplateTypes[];
 };
 export type ResArgs = {
-  folder: string;
-  framework: string;
   [key: string]: string | boolean | string[];
 };

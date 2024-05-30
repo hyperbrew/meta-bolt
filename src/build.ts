@@ -1,7 +1,7 @@
-import * as path from "path";
-import * as fs from "fs";
-import * as fg from "fast-glob";
-import * as color from "picocolors";
+import path from "path";
+import fs from "fs";
+import fg from "fast-glob";
+import color from "picocolors";
 
 import { execAsync, getPackageManager, posix } from "./utils";
 import { spinner, note } from "@clack/prompts";
@@ -129,8 +129,10 @@ export const buildBolt = async (
   base: BaseInfo,
   args: ResArgs
 ) => {
-  if (!args.folder) throw Error("Folder not provided");
-  if (!args.framework) throw Error("Folder not provided");
+  if (!args.folder || typeof args.folder !== "string")
+    throw Error("Folder not provided");
+  if (!args.framework || typeof args.folder !== "string")
+    throw Error("Framework not provided");
 
   const fullPath = path.join(process.cwd(), args.folder);
   note(
@@ -193,12 +195,12 @@ export const buildBolt = async (
       }
     }
   });
-  console.log({
-    fileIncludes,
-    fileExcludes,
-    keywordIncludes,
-    keywordExcludes,
-  });
+  // console.log({
+  //   fileIncludes,
+  //   fileExcludes,
+  //   keywordIncludes,
+  //   keywordExcludes,
+  // });
 
   const files = await fg(
     [
@@ -211,7 +213,7 @@ export const buildBolt = async (
     }
   );
 
-  console.log({ files });
+  // console.log({ files });
 
   for (const file of files) {
     const fileName = file.replace(stem, "");
@@ -274,9 +276,12 @@ export const buildBolt = async (
     s.stop("Dependencies installed!");
   }
 
+  const maxArgNameLength = Math.max(
+    ...initData.argsTemplate.map((argTmp) => argTmp.name.length)
+  );
   const noteStr = Object.keys(args).map((key) => {
     const value = args[key];
-    return `${key} ${value.toString()}`;
+    return `${key.padEnd(maxArgNameLength + 3, " ")} ${value.toString()}`;
   });
   note(noteStr.join("\n"), "Inputs");
 

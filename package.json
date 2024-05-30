@@ -30,6 +30,8 @@
     "@types/resolve-dir": "^0.0.0",
     "archiver": "^7.0.1",
     "bolt-uxp": "^0.1.25",
+    "cliui": "^8.0.1",
+    "commander": "^12.1.0",
     "execa": "^5.1.1",
     "fast-glob": "^3.3.2",
     "fs-extra": "^10.0.1",
@@ -40,7 +42,7 @@
     "ts-morph": "^17.0.1",
     "ts-node": "^10.7.0",
     "typescript": "^4.9.5",
-    "yargs": "^17.4.0"
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
     "@types/archiver": "^6.0.2",

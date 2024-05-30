@@ -1,142 +1,90 @@
 import * as color from "picocolors";
-import * as yargs from "yargs";
+// import * as yargs from "yargs";
 
-import type { Args } from "./build-old";
-import {
-  appOptions,
-  appValues,
-  frameworkOptions,
-  frameworkValues,
-} from "./data";
+import { Command, Option } from "commander";
 
-import { parsePath } from "./parse-path";
-import type { BoltInitData, ArgTemplate } from ".";
+// import yargs from "yargs/yargs";
+// import { hideBin } from "yargs/helpers";
 
-export async function parseArgs(argsTemplate: ArgTemplate[]): Promise<Args> {
-  let argv = yargs.usage("Usage: $0 <appname> [options]").positional("folder", {
-    describe: "Name of the folder for the new Bolt UXP plugin",
-    type: "string",
-  });
-  argv = argv.option("framework", {
-    alias: "f",
-    choices: frameworkValues,
-    type: "string",
-  });
+import { ArgTemplateTypes } from "./types";
+
+export async function parseArgs(
+  argsTemplate: ArgTemplateTypes[]
+): Promise<any> {
+  const program = new Command();
+  // program.enablePositionalOptions();
+
+  program
+    .name("my-app")
+    .description("CLI for my app")
+    .version("1.0.0")
+    .argument("<folder>", "Name of the folder for the new Bolt UXP plugin");
+  program.exitOverride();
+
   for (const arg of argsTemplate) {
-    if (arg.type === "folder") continue;
-    let argvOptions: yargs.Options = {
-      describe: arg.describe,
-      type: arg.type,
-    };
-    if (arg.alias) {
-      argvOptions.alias = arg.alias;
+    let opt = new Option(`-${arg.alias} --${arg.name}`, arg.describe);
+    opt.required = arg.required;
+
+    if (arg.type === "string") {
+      program.addOption(opt);
+    } else if (arg.type === "boolean") {
+      opt.argParser((val: string) => (val || val === "true" ? true : false));
+      program.addOption(opt);
+    } else if (arg.type === "select") {
+      opt.choices(arg.options.map((opt) => opt.value));
+      program.addOption(opt);
+    } else if (arg.type === "multiselect") {
+      opt.choices(arg.options.map((opt) => opt.value));
+      opt.argParser((val: string) => val.split(","));
+      program.addOption(opt);
     }
-    let argvNew = argv.option(arg.name, argvOptions).argv;
+  }
+  try {
+    program.parse();
+    const folder = program.args[0]; // Retrieve the positional argument
+    const options = program.opts();
+    return { ...options, folder }; // Return options including the positional argument
+  } catch (e) {
+    return {};
   }
 
-  const argv3 = await yargs
-    .usage("Usage: $0 <appname> [options]")
-    .positional("folder", {
-      describe: "Name of the folder for the new Bolt UXP plugin",
-      type: "string",
-    })
-    .option("framework", {
-      alias: "f",
-      choices: frameworkValues,
-      type: "string",
-    })
-    .option("apps", {
-      alias: "a",
-      choices: appValues,
-      coerce: (arg: string | string[]) => {
-        if (typeof arg === "string") {
-          return arg.split(",");
-        } else if (Array.isArray(arg)) {
-          return arg.flatMap((a) => a.split(","));
-        }
-      },
-      type: "array",
-    })
-    .option("id", {
-      alias: "i",
-      describe: "Unique ID for UXP Panel (e.g. bolt.uxp.plugin)",
-      type: "string",
-    })
-    .option("display-name", {
-      alias: "n",
-      describe: "Panel's display name (e.g. Bolt UXP)",
-      type: "string",
-    })
-    .option("hybrid", {
-      alias: "h",
-      describe: "Enable C++ Hybrid Plugin (default: true)",
-      type: "boolean",
-    })
-    .option("install-dependencies", {
-      alias: "d",
-      describe: "Install dependencies (default: false)",
-      type: "boolean",
-    })
-    .option("sample-code", {
-      alias: "s",
-      describe: "Keep Sample Code (default: true)",
-      type: "boolean",
-    })
-    .check(({ framework, template, apps: _apps }) => {
-      if (framework && !frameworkValues.includes(framework)) {
-        throwError(
-          "--framework",
-          `needs to be one of: ${frameworkValues
-            .map((x) => `'${x}'`)
-            .join(", ")}`,
-          framework
-        );
-      }
-      if (_apps?.length && !_apps.every((app) => appValues.includes(app))) {
-        throwError(
-          "--apps",
-          `values need to be of supported apps: ${appValues.map((x) => `'${x}'`).join(", ")}`, // prettier-ignore
-          appValues.join(",")
-        );
-      }
+  // let argv = yargs()
+  //   .usage("Usage: $0 <appname> [options]")
+  //   .positional("folder", {
+  //     describe: "Name of the folder for the new Bolt UXP plugin",
+  //     type: "string",
+  //   });
 
-      return true;
-    })
-    .example([
-      [
-        'create bolt-uxp <folder> -f svelte -a "photoshop" -i test.my.panel -n "Test"',
-        "",
-      ],
-      ['create bolt-uxp <folder> -f react -a "photoshop,indesign"', ""],
-      ["create bolt-uxp <folder>", ""],
-    ])
-    .help().argv;
-
-  const folder = argv["_"][0] ? String(argv["_"][0]) : "";
-
-  if (argv._.length === 0) {
-    return {
-      folder: "",
-      displayName: "",
-      id: "",
-      framework: "",
-      apps: [],
-      enableHybrid: argv.hybrid || undefined,
-      keepSampleCode: argv.sampleCode || undefined,
-      installDeps: argv.installDependencies || undefined,
-    };
-  }
-
-  return {
-    folder: folder || "",
-    displayName: argv.displayName || "",
-    id: argv.id || "",
-    framework: argv.framework || "",
-    apps: argv.apps || [],
-    enableHybrid: argv.hybrid || false,
-    keepSampleCode: argv.sampleCode || true,
-    installDeps: argv.installDependencies || false,
-  };
+  // for (const arg of argsTemplate) {
+  //   if (arg.type === "folder" || arg.type === "string") {
+  //     argv.option(arg.name, {
+  //       describe: arg.describe,
+  //       type: "string",
+  //       alias: arg.alias,
+  //     });
+  //   } else if (arg.type === "boolean") {
+  //     argv.option(arg.name, {
+  //       describe: arg.describe,
+  //       type: "boolean",
+  //       alias: arg.alias,
+  //     });
+  //   } else if (arg.type === "select") {
+  //     argv.option(arg.name, {
+  //       describe: arg.describe,
+  //       type: "string",
+  //       choices: arg.options.map((opt) => opt.value),
+  //       alias: arg.alias,
+  //     });
+  //   } else if (arg.type === "multiselect") {
+  //     argv.option(arg.name, {
+  //       describe: arg.describe,
+  //       type: "array",
+  //       choices: arg.options.map((opt) => opt.value),
+  //       alias: arg.alias,
+  //     });
+  //   }
+  // }
+  // return argv.argv;
 }
 
 export function throwError(arg: string, message: string, value: string) {

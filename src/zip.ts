@@ -1,6 +1,6 @@
-import * as fs from "fs";
-import * as path from "path";
-import * as archiver from "archiver";
+import fs from "fs";
+import path from "path";
+import archiver from "archiver";
 
 import { log, resetLog } from "./lib";
 
