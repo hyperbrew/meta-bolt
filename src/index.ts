@@ -9,6 +9,8 @@ import {
   isCancel,
   cancel,
   confirm,
+  note,
+  log,
 } from "@clack/prompts";
 import { buildBolt } from "./build";
 
@@ -29,10 +31,14 @@ import type {
 
 export type { BoltInitData, ArgOpt };
 
+const quitProcess = (value: string) => {
+  cancel(value);
+  return process.exit(0);
+};
+
 const handleCancel = (value: unknown) => {
   if (isCancel(value)) {
-    cancel("Operation cancelled");
-    return process.exit(0);
+    return quitProcess("Operation cancelled");
   }
 };
 
@@ -66,18 +72,40 @@ export const main = async (initData: BoltInitData) => {
       })) as boolean;
       handleCancel(res);
     } else if (arg.type === "select") {
-      res = (await select({
-        message: arg.message,
-        options: arg.options,
-      })) as string;
-      handleCancel(res);
+      let completed = false;
+      while (!completed) {
+        res = (await select({
+          message: arg.message,
+          options: arg.options,
+        })) as string;
+        if (arg.validator) {
+          const err = arg.validator([res]);
+          if (err) {
+            log.warn(err);
+            continue;
+          }
+        }
+        completed = true;
+        handleCancel(res);
+      }
     } else if (arg.type === "multiselect") {
-      res = (await multiselect({
-        message: arg.message,
-        options: arg.options,
-        required: arg.required,
-      })) as string[];
-      handleCancel(res);
+      let completed = false;
+      while (!completed) {
+        res = (await multiselect({
+          message: arg.message,
+          options: arg.options,
+          required: arg.required,
+        })) as string[];
+        if (arg.validator) {
+          const err = arg.validator(res);
+          if (err) {
+            log.warn(err);
+            continue;
+          }
+        }
+        completed = true;
+        handleCancel(res);
+      }
     }
     if (res) {
       resArgs[arg.name] = res;

@@ -22,7 +22,9 @@ export interface ArgTemplateGeneric {
   message: string;
   initialValue?: string | boolean;
   required: boolean;
-  validator?: (input: string) => void | string;
+  validator?:
+    | ((input: string) => void | string)
+    | ((input: string[]) => void | string);
   describe: string;
   options?: ArgOpt[];
   alias?: string;
@@ -35,9 +37,11 @@ export interface ArgTemplateBoolean extends ArgTemplateGeneric {
 export interface ArgTemplateString extends ArgTemplateGeneric {
   type: "string" | "folder";
   initialValue: string;
+  validator?: (input: string) => void | string;
 }
 export interface ArgTemplateSelect extends ArgTemplateGeneric {
   type: "select" | "multiselect";
+  validator?: (input: string[]) => void | string;
   // initialValue: undefined;
   options: ArgOpt[];
 }
