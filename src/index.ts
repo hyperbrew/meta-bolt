@@ -49,7 +49,10 @@ export const main = async (initData: BoltInitData) => {
   const { intro, base, argsTemplate } = initData;
   boltIntro(intro);
 
-  const cliArgs: ResArgs = await parseArgs(argsTemplate);
+  const cliArgs: ResArgs = await parseArgs(initData);
+  if (process.argv.pop() === "--help") {
+    quitProcess("");
+  }
 
   let promptArgs: ResArgs = {};
   for (const arg of argsTemplate) {

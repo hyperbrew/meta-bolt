@@ -1,25 +1,34 @@
 import * as color from "picocolors";
-// import * as yargs from "yargs";
 
 import { Command, Option } from "commander";
 
-// import yargs from "yargs/yargs";
-// import { hideBin } from "yargs/helpers";
+import { ArgTemplateTypes, BoltInitData } from "./types";
+import { clearLine } from "readline";
 
-import { ArgTemplateTypes } from "./types";
-
-export async function parseArgs(
-  argsTemplate: ArgTemplateTypes[]
-): Promise<any> {
+export async function parseArgs(initData: BoltInitData): Promise<any> {
+  const { argsTemplate } = initData;
   const program = new Command();
-  // program.enablePositionalOptions();
 
   program
-    .name("my-app")
-    .description("CLI for my app")
+    .name(`create-${initData.intro.name || ""}`)
+    .description(`CLI to create a new ${initData.intro.name}`)
     .version("1.0.0")
     .argument("<folder>", "Name of the folder for the new Bolt UXP plugin");
   program.exitOverride();
+  program.configureOutput({
+    // writeOut: (str) => {
+    //   process.stdout.write(`${str}`);
+    // },
+
+    // don't log errors
+    writeErr: (str) => {
+      // process.stdout.write(`[ERR] ${str}`);
+    },
+    // Highlight errors in color.
+    // outputError: (str, write) => {
+    // write(errorColor(str));
+    // },
+  });
 
   for (const arg of argsTemplate) {
     let opt = new Option(`-${arg.alias} --${arg.name}`, arg.describe);
@@ -47,44 +56,6 @@ export async function parseArgs(
   } catch (e) {
     return {};
   }
-
-  // let argv = yargs()
-  //   .usage("Usage: $0 <appname> [options]")
-  //   .positional("folder", {
-  //     describe: "Name of the folder for the new Bolt UXP plugin",
-  //     type: "string",
-  //   });
-
-  // for (const arg of argsTemplate) {
-  //   if (arg.type === "folder" || arg.type === "string") {
-  //     argv.option(arg.name, {
-  //       describe: arg.describe,
-  //       type: "string",
-  //       alias: arg.alias,
-  //     });
-  //   } else if (arg.type === "boolean") {
-  //     argv.option(arg.name, {
-  //       describe: arg.describe,
-  //       type: "boolean",
-  //       alias: arg.alias,
-  //     });
-  //   } else if (arg.type === "select") {
-  //     argv.option(arg.name, {
-  //       describe: arg.describe,
-  //       type: "string",
-  //       choices: arg.options.map((opt) => opt.value),
-  //       alias: arg.alias,
-  //     });
-  //   } else if (arg.type === "multiselect") {
-  //     argv.option(arg.name, {
-  //       describe: arg.describe,
-  //       type: "array",
-  //       choices: arg.options.map((opt) => opt.value),
-  //       alias: arg.alias,
-  //     });
-  //   }
-  // }
-  // return argv.argv;
 }
 
 export function throwError(arg: string, message: string, value: string) {
