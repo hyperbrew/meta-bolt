@@ -55,6 +55,7 @@ export type BaseInfo = {
   module: string;
   globalIncludes: string[];
   globalExcludes: string[];
+  fileRenames?: [string, string][];
 };
 export type BoltInitData = {
   intro: IntroData;

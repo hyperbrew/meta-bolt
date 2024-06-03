@@ -34,7 +34,8 @@ const getJSOnlyRegex = (variable: string) =>
 const getJSReplaceRegex = (variable: string) =>
   new RegExp(`^.*\/\/ BOLT_${variable}_REPLACE.*(\n|\r\n)?`, "gm");
 
-const allCommentsRegex = /\/\/ BOLT_.*_(START|END|ONLY|REPLACE).*(\n|\r\n)?/gm;
+const allInlineCommentsRegex = /^.*\/\/ BOLT_.*_(ONLY|REPLACE)/gm;
+const allReturnCommentsRegex = /^.*\/\/ BOLT_.*_(START|END).*(\n|\r\n)?/gm;
 
 const getJSXRegex = (variable: string) =>
   new RegExp(
@@ -42,8 +43,9 @@ const getJSXRegex = (variable: string) =>
     "gm"
   );
 
-const allJSXCommentsRegex =
-  /\{\/\* BOLT_.*_(START|END|ONLY|REPLACE) \*\/\}.*(\n|\r\n)?/gm;
+const allReturnJSXCommentsRegex =
+  /^.*\{\/\* BOLT_.*_(START|END) \*\/\}.*(\n|\r\n)?/gm;
+const allInlineJSXCommentsRegex = /^.*\{\/\* BOLT_.*_(ONLY|REPLACE) \*\/\}/gm;
 
 const getHTMLRegex = (variable: string) =>
   new RegExp(
@@ -51,8 +53,10 @@ const getHTMLRegex = (variable: string) =>
     "g"
   );
 
-const allHTMLCommentsRegex =
-  /<!-- BOLT_.*_(START|END|ONLY|REPLACE).*-->.*(\n|\r\n)?/gm;
+const allReturnHTMLCommentsRegex =
+  /^.*<!-- BOLT_.*_(START|END).*-->.*(\n|\r\n)?/gm;
+const allInlineHTMLCommentsRegex = /^.*<!-- BOLT_.*_(ONLY|REPLACE).*-->/gm;
+
 const htmlDisabledScriptTagRegexStart = /<!-- <script/g;
 const htmlDisabledScriptTagRegexEnd = /<\/script> -->.*/g;
 
@@ -94,10 +98,11 @@ const formatFile = async (
     const matches = txt.match(rangeReplaceJS);
     if (matches) {
       matches.map((match) => {
-        const stringRegex = /(\".*\")|(\'.*\')/g;
+        const stringRegex = /(["'])((?:\\\1|(?:(?!\1)).)*)(\1)/g;
         const oldStringMatches = match.match(stringRegex);
         if (oldStringMatches) {
-          const oldString = oldStringMatches[0];
+          const i = oldStringMatches.length - 1;
+          const oldString = oldStringMatches[i];
           const quotation = oldString[0];
           const newString = `${quotation}${value}${quotation}`;
           const newMatch = match.replace(oldString, newString);
@@ -108,9 +113,17 @@ const formatFile = async (
   });
 
   // cleanup all remaining bolt comments
-  txt = txt.replace(allCommentsRegex, "");
-  txt = txt.replace(allHTMLCommentsRegex, "");
-  txt = txt.replace(allJSXCommentsRegex, "");
+  [
+    allInlineCommentsRegex,
+    allReturnCommentsRegex,
+    allReturnJSXCommentsRegex,
+    allInlineJSXCommentsRegex,
+    allReturnHTMLCommentsRegex,
+    allInlineHTMLCommentsRegex,
+  ].map((regex) => {
+    txt = txt.replace(regex, "");
+  });
+
   if (ext === ".html") {
     // re-enable all disabled <script /> tags
     txt = txt
@@ -251,21 +264,29 @@ export const buildBolt = async (
 
   //* Update Config
 
-  //* rename package.json
-  fs.renameSync(
-    path.join(fullPath, `package.${args.framework}.json`),
-    path.join(fullPath, "package.json")
-  );
+  // //* rename package.json
+  // fs.renameSync(
+  //   path.join(fullPath, `package.${args.framework}.json`),
+  //   path.join(fullPath, "package.json")
+  // );
 
-  //* update package.json
-  const packageJson = path.join(fullPath, "package.json");
-  const packageJsonData = JSON.parse(fs.readFileSync(packageJson, "utf8"));
-  packageJsonData.name = args.id;
-  fs.writeFileSync(
-    packageJson,
-    JSON.stringify(packageJsonData, null, 2),
-    "utf8"
-  );
+  // //* update package.json
+  // const packageJson = path.join(fullPath, "package.json");
+  // const packageJsonData = JSON.parse(fs.readFileSync(packageJson, "utf8"));
+  // packageJsonData.name = args.id;
+  // fs.writeFileSync(
+  //   packageJson,
+  //   JSON.stringify(packageJsonData, null, 2),
+  //   "utf8"
+  // );
+
+  //* handle renames
+  initData.base.fileRenames?.map(([oldName, newName]) => {
+    const oldPath = path.join(fullPath, oldName);
+    if (!fs.existsSync(oldPath)) return;
+    const newPath = path.join(fullPath, newName);
+    fs.renameSync(oldPath, newPath);
+  });
 
   const pm = getPackageManager() || "npm";
   // * Dependencies
