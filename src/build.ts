@@ -223,6 +223,7 @@ export const buildBolt = async (
     {
       onlyFiles: true,
       followSymbolicLinks: true,
+      dot: true,
     }
   );
 
