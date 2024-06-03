@@ -157,6 +157,11 @@ export const buildBolt = async (
     path.join(__dirname, "..", `/node_modules/${base.module}/`)
   );
   const globalStem = posix(path.join(__dirname, `../../${base.module}`));
+  console.log({
+    __dirname,
+    localStem,
+    globalStem,
+  });
   const stem = fs.existsSync(globalStem) ? globalStem : localStem;
 
   if (fs.existsSync(fullPath)) fs.rmSync(fullPath, { recursive: true });
