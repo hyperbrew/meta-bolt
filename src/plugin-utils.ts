@@ -29,7 +29,7 @@ type PackageJSON = {
 export const packageSync = () => {
   const basePath = "./"; // Modify this path if your package files are in a different directory
   const packageFiles = readdirSync(basePath).filter((file) =>
-    file.match(/^package\..*\.json$/)
+    file.match(/^package\..*\.json(c?)$/)
   );
   const pack = readFileSync(join(basePath, "package.json"), "utf-8");
   const packJson = JSON.parse(pack) as PackageJSON;

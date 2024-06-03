@@ -6,7 +6,7 @@ import color from "picocolors";
 import { execAsync, getPackageManager, posix } from "./utils";
 import { spinner, note } from "@clack/prompts";
 
-import { capitalize, isArray, replace } from "radash";
+import { isArray } from "radash";
 
 import type {
   IntroData,
@@ -262,25 +262,7 @@ export const buildBolt = async (
     }
   }
 
-  //* Update Config
-
-  // //* rename package.json
-  // fs.renameSync(
-  //   path.join(fullPath, `package.${args.framework}.json`),
-  //   path.join(fullPath, "package.json")
-  // );
-
-  // //* update package.json
-  // const packageJson = path.join(fullPath, "package.json");
-  // const packageJsonData = JSON.parse(fs.readFileSync(packageJson, "utf8"));
-  // packageJsonData.name = args.id;
-  // fs.writeFileSync(
-  //   packageJson,
-  //   JSON.stringify(packageJsonData, null, 2),
-  //   "utf8"
-  // );
-
-  //* handle renames
+  //* Handle Renames
   initData.base.fileRenames?.map(([oldName, newName]) => {
     const oldPath = path.join(fullPath, oldName);
     if (!fs.existsSync(oldPath)) return;
