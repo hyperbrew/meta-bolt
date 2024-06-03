@@ -11,6 +11,7 @@ import {
 } from "fs";
 import { join } from "path";
 import { zipPackage } from "./zip";
+import { parse as parseJSONC } from "jsonc-parser";
 
 export { zipPackage };
 
@@ -37,8 +38,11 @@ export const packageSync = () => {
   const warnings: { [key: string]: string[] } = {};
 
   packageFiles.forEach((file) => {
-    const content = readFileSync(join(basePath, file), "utf-8");
-    const jsonContent = JSON.parse(content) as PackageJSON;
+    let content = readFileSync(join(basePath, file), "utf-8");
+    const jsonData = file.endsWith(".jsonc")
+      ? (content = parseJSONC(content))
+      : JSON.parse(content);
+    const jsonContent = jsonData as PackageJSON;
     const framework = file.split(".")[1];
 
     warnings[framework] = [];
