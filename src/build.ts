@@ -34,7 +34,7 @@ const getJSOnlyRegex = (variable: string) =>
 const getJSReplaceRegex = (variable: string) =>
   new RegExp(`^.*\/\/ BOLT_${variable}_REPLACE.*(\n|\r\n)?`, "gm");
 
-const allInlineCommentsRegex = /^.*\/\/ BOLT_.*_(ONLY|REPLACE)/gm;
+const allInlineCommentsRegex = /\/\/ BOLT_.*_(ONLY|REPLACE)/gm;
 const allReturnCommentsRegex = /^.*\/\/ BOLT_.*_(START|END).*(\n|\r\n)?/gm;
 
 const getJSXRegex = (variable: string) =>
@@ -45,7 +45,7 @@ const getJSXRegex = (variable: string) =>
 
 const allReturnJSXCommentsRegex =
   /^.*\{\/\* BOLT_.*_(START|END) \*\/\}.*(\n|\r\n)?/gm;
-const allInlineJSXCommentsRegex = /^.*\{\/\* BOLT_.*_(ONLY|REPLACE) \*\/\}/gm;
+const allInlineJSXCommentsRegex = /\{\/\* BOLT_.*_(ONLY|REPLACE) \*\/\}/gm;
 
 const getHTMLRegex = (variable: string) =>
   new RegExp(
@@ -55,7 +55,7 @@ const getHTMLRegex = (variable: string) =>
 
 const allReturnHTMLCommentsRegex =
   /^.*<!-- BOLT_.*_(START|END).*-->.*(\n|\r\n)?/gm;
-const allInlineHTMLCommentsRegex = /^.*<!-- BOLT_.*_(ONLY|REPLACE).*-->/gm;
+const allInlineHTMLCommentsRegex = /<!-- BOLT_.*_(ONLY|REPLACE).*-->/gm;
 
 const htmlDisabledScriptTagRegexStart = /<!-- <script/g;
 const htmlDisabledScriptTagRegexEnd = /<\/script> -->.*/g;

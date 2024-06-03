@@ -48,6 +48,8 @@ Only truly required options are:
 - installDeps
 
 ```js
+#!/usr/bin/env node
+
 import { main } from "meta-bolt";
 import type { BoltInitData, ArgOpt } from "meta-bolt";
 
