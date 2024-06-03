@@ -127,7 +127,7 @@ export const main = async (initData: BoltInitData) => {
 };
 
 function boltIntro(args: IntroData) {
-  const name = args.name ?? "create-bolt-uxp";
+  const name = args.name ?? "create-bolt";
   const url = args.url ?? "https://hyperbrew.co";
   const byLine = args.byLine ?? "by Hyper Brew";
   console.log();
@@ -136,8 +136,3 @@ function boltIntro(args: IntroData) {
   const bru = color.gray("│   ") + color.cyan(`${byLine} | ${urlElement}`);
   intro(`${cbc} \n${bru}`);
 }
-
-// if not using as a module, run immediately
-// if (!process.env.BOLT_MODULEONLY) {
-//   main({});
-// }

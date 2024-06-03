@@ -38,7 +38,7 @@ import {
 
 ## 3. The Create Script
 
-Once your template and plugin are functioning well, now you'll need to construct a create script so a user can easily generate their own project from the specific Bolt project (e.g. `yarn create bolt-uxp`, `yarn create bolt-cep`).
+Once your template and plugin are functioning well, now you'll need to construct a create script so a user can easily generate their own project from the specific Bolt project (e.g. `yarn create bolt-project`).
 
 To do this, follow the template below to list all possible options for the user to choose from.
 
@@ -48,7 +48,6 @@ Only truly required options are:
 - installDeps
 
 ```js
-process.env.BOLT_MODULEONLY = "true";
 import { main } from "meta-bolt";
 import type { BoltInitData, ArgOpt } from "meta-bolt";
 
@@ -169,9 +168,8 @@ const initData: BoltInitData = {
   ],
 };
 
-process.env.BOLT_MODULEONLY = "true";
-
-main(initData);
+//* if not using as a module, run immediately
+if (!process.env.BOLT_MODULEONLY) main(initData);
 ```
 
 Once you've built out your template with all the options for your project, now you will need to update your template to be dynamic with this create script.

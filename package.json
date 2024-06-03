@@ -1,9 +1,9 @@
 {
   "name": "meta-bolt",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "bin": {
-    "create-bolt-uxp": "dist/index.js"
+    "create-meta-bolt": "dist/index.js"
   },
   "files": [
     "dist/*"
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hyper-brew/bolt-uxp.git",
+    "url": "git+https://github.com/hyper-brew/meta-bolt.git",
     "directory": "packages/create-vite"
   },
   "dependencies": {
@@ -29,7 +29,6 @@
     "@types/prettier": "^3.0.0",
     "@types/resolve-dir": "^0.0.0",
     "archiver": "^7.0.1",
-    "bolt-uxp": "^0.1.25",
     "cliui": "^8.0.1",
     "commander": "^12.1.0",
     "execa": "^5.1.1",
