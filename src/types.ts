@@ -53,6 +53,7 @@ export type ArgTemplateTypes =
 
 export type BaseInfo = {
   module: string;
+  createDirName: string;
   globalIncludes: string[];
   globalExcludes: string[];
   fileRenames?: [string, string][];

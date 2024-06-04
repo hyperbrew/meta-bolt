@@ -153,12 +153,24 @@ export const buildBolt = async (
     "Info"
   );
 
-  const localStem = posix(
+  const ogLocalStem = posix(
     path.join(__dirname, "..", `/node_modules/${base.module}/`)
   );
-  const globalStem = posix(path.join(__dirname, `../../${base.module}`));
+  const ogGlobalStem = posix(path.join(__dirname, `../../${base.module}`));
   console.log({
     __dirname,
+    ogLocalStem,
+    ogGlobalStem,
+  });
+
+  const localStem = posix(
+    path.join(base.createDirName, "..", `/node_modules/${base.module}/`)
+  );
+  const globalStem = posix(
+    path.join(base.createDirName, `../../${base.module}`)
+  );
+  console.log({
+    createDirName: base.createDirName,
     localStem,
     globalStem,
   });
