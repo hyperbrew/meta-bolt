@@ -283,7 +283,7 @@ export const buildBolt = async (
   if (args.installDeps) {
     const s = spinner();
     s.start("Installing dependencies...");
-    await execAsync(`cd ${fullPath} && ${pm} install`);
+    await execAsync(`cd "${fullPath}" && ${pm} install`);
     s.stop("Dependencies installed!");
   }
 
