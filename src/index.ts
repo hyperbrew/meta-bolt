@@ -28,6 +28,8 @@ import type {
   BoltInitData,
   ResArgs,
 } from "./types";
+import path from "path";
+import { existsSync } from "fs";
 
 export type { BoltInitData, ArgOpt };
 
@@ -62,12 +64,26 @@ export const main = async (initData: BoltInitData) => {
 
     let res;
     if (arg.type === "folder" || arg.type === "string") {
-      res = (await text({
-        message: arg.message,
-        initialValue: arg.initialValue,
-        validate: arg.validator,
-      })) as string;
-      handleCancel(res);
+      let completed = false;
+      while (!completed) {
+        res = (await text({
+          message: arg.message,
+          initialValue: arg.initialValue,
+          validate: arg.validator,
+        })) as string;
+        if (arg.type === "folder") {
+          const fullPath = path.join(process.cwd(), res);
+          if (existsSync(fullPath)) {
+            const overwrite = (await confirm({
+              message: `⚠️  WARNING: Folder already exists. Do you want to overwite it? ( ${fullPath} )`,
+              initialValue: false,
+            })) as boolean;
+            if (!overwrite) continue;
+          }
+        }
+        completed = true;
+        handleCancel(res);
+      }
     } else if (arg.type === "boolean") {
       res = (await confirm({
         message: arg.message,
