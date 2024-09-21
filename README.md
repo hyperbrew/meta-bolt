@@ -1,6 +1,6 @@
 <img src="meta-bolt-logo.svg" alt="Meta Bolt" title="Meta Bolt" width="400" />
 
-Meta Bolt by Hyper Brew is an underlying framework for many of Hyper Brew's popular frameworks like [Bolt CEP](https://github.com/hyperbrew/bolt-cep/), [Bolt UXP](https://github.com/hyperbrew/bolt-uxp/), and others.
+Meta Bolt by Hyper Brew is an underlying framework for many of Hyper Brew's popular frameworks like [Bolt Figma](https://github.com/hyperbrew/bolt-figma) [Bolt CEP](https://github.com/hyperbrew/bolt-cep/), [Bolt UXP](https://github.com/hyperbrew/bolt-uxp/), and others.
 
 ![npm](https://img.shields.io/npm/v/meta-bolt)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/hyperbrew/meta-bolt/blob/master/LICENSE)
@@ -17,7 +17,7 @@ This package is mainly build for Hyper Brew's project, but it is open-source so 
 
 ## 1. The Template
 
-Firstly, you will need to construct a template that works for your desired project, ideally built on Vite.js, weather it's for a plugin template, addon framework, script setup, or something else.
+Firstly, you will need to construct a template that works for your desired project, ideally built on Vite.js, whether it's for a plugin template, addon framework, script setup, or something else.
 
 Once you have your template working, add necessary files for various options (e.g. framework (svelte, react, vue))
 
