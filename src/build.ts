@@ -297,7 +297,10 @@ export const buildBolt = async (
   note(noteStr.join("\n"), "Inputs");
 
   let summary = [
-    `${intro.prettyName} generated` + `: ${color.green(color.bold(fullPath))}`,
+    `${intro.prettyName} generated` + `: ${color.green(color.bold(fullPath))}.`,
+    `To get started, run: ${color.yellow(
+      `cd ${path.basename(fullPath)} && ${pm} run build`
+    )} and see the README for more help.`,
   ];
   if (!args.installDeps) {
     summary = [
