@@ -32,12 +32,21 @@ export const zipPackage = async (
   const tmpDir = path.join(dest, "tmp");
   fs.mkdirSync(tmpDir, { recursive: true });
   const tmpSrcDir = srcSubFolder ? path.join(tmpDir, zipName) : src;
-  fs.mkdirSync(tmpSrcDir, { recursive: true });
-  fs.readdirSync(src).map((file) => {
-    fs.cpSync(path.join(src, file), path.join(tmpSrcDir, file), {
-      recursive: true,
+  if (srcSubFolder) {
+    fs.mkdirSync(tmpSrcDir, { recursive: true });
+    console.log({ src, tmpSrcDir });
+    fs.readdirSync(src).map((file) => {
+      fs.cpSync(path.join(src, file), path.join(tmpSrcDir, file), {
+        recursive: true,
+      });
     });
-  });
+  } else {
+    fs.readdirSync(src).map((file) => {
+      fs.cpSync(path.join(src, file), path.join(tmpDir, file), {
+        recursive: true,
+      });
+    });
+  }
 
   if (assetDirs) {
     assetDirs.map((assetDir) => {
