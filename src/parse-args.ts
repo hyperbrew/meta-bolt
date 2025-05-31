@@ -13,7 +13,7 @@ export async function parseArgs(initData: BoltInitData): Promise<any> {
     .name(`create-${initData.intro.name || ""}`)
     .description(`CLI to create a new ${initData.intro.name}`)
     .version("1.0.0")
-    .argument("<folder>", "Name of the folder for the new Bolt UXP plugin");
+    .argument("<folder>", "Name of the folder for the new Bolt project");
   program.exitOverride();
   program.configureOutput({
     // writeOut: (str) => {
