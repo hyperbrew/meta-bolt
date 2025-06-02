@@ -8,18 +8,7 @@ import { spinner, note } from "@clack/prompts";
 
 import { isArray } from "radash";
 
-import type {
-  IntroData,
-  ArgOpt,
-  ArgTemplateGeneric,
-  ArgTemplateBoolean,
-  ArgTemplateString,
-  ArgTemplateSelect,
-  ArgTemplateTypes,
-  BaseInfo,
-  BoltInitData,
-  ResArgs,
-} from "./types";
+import type { IntroData, BaseInfo, BoltInitData, ResArgs } from "./types";
 
 const multiBlankLineRegex = /(\r?\n\s*){1,}/g;
 
@@ -245,7 +234,6 @@ export const buildBolt = async (
       fs.cpSync(file, dest, {
         recursive: true,
       });
-      // todo might need recursion here instead of if/else for file/folder
     } else {
       fs.copyFileSync(file, dest);
       const txt = fs.readFileSync(dest, "utf8");
@@ -258,8 +246,6 @@ export const buildBolt = async (
         keywordExcludes,
         args
       );
-
-      // TODO: Update replace feature for ID, Display Name, etc.
 
       // wite file if changed
       if (newTxt !== txt) {

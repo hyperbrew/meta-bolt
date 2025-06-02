@@ -1,6 +1,10 @@
 <img src="meta-bolt-logo.svg" alt="Meta Bolt" title="Meta Bolt" width="400" />
 
-Meta Bolt by Hyper Brew is an underlying framework for many of Hyper Brew's popular frameworks like [Bolt Figma](https://github.com/hyperbrew/bolt-figma) [Bolt CEP](https://github.com/hyperbrew/bolt-cep/), [Bolt UXP](https://github.com/hyperbrew/bolt-uxp/), and others.
+Meta Bolt by Hyper Brew is an underlying framework for many of Hyper Brew's popular frameworks like [Bolt Figma](https://github.com/hyperbrew/bolt-figma) [Bolt CEP](https://github.com/hyperbrew/bolt-cep/), [Bolt Express](https://github.com/hyperbrew/bolt-express/).
+
+Coming soon:
+
+- [Bolt UXP](https://github.com/hyperbrew/bolt-uxp/)
 
 ![npm](https://img.shields.io/npm/v/meta-bolt)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/hyperbrew/meta-bolt/blob/master/LICENSE)
@@ -11,7 +15,7 @@ Meta Bolt provides these frameworks with 2 things:
 1.  A template for easily creating new `create-script` projects (e.g. `yarn create bolt-cep`)
 2.  Helper functions for use in vite plugins (e.g. syncing npm packages, emptying folders, copying files, etc)
 
-This package is mainly build for Hyper Brew's project, but it is open-source so feel free to try if you find it useful.
+This package is mainly build for Hyper Brew's project, but it is open-source so feel free to use if you find it useful.
 
 # How to build a new Bolt project with Meta Bolt
 
@@ -23,7 +27,7 @@ Once you have your template working, add necessary files for various options (e.
 
 ## 2. The Plugin
 
-Very connected to step 1, you will need to construct a custom Vite plugin for your project type (e.g. vite-cep-plugin, vite-uxp-plugin, etc).
+Very connected to step 1, you will need to construct a custom Vite plugin for your project type (e.g. vite-cep-plugin, vite-figma-plugin, etc).
 
 Utilize functions in meta-bolt's `plugin-utils` package to help with the plugin's functionality.
 
@@ -123,7 +127,7 @@ const initData: BoltInitData = {
       name: "displayName",
       type: "string",
       message: "Choose a unique Display Name for your plugin:",
-      initialValue: "Bolt Figma",
+      initialValue: "Bolt Project",
       required: true,
       validator: (input: string) => {
         if (input.length < 1) return `Value is required!`;
@@ -199,13 +203,13 @@ someCode(); // BOLT_VARIABLE_ONLY
 Replace comments will grab the last string and replace it's contents with the parameter result
 
 ```jsonc
-"name": "bolt-figma", // BOLT_ID_REPLACE
+"name": "bolt-project", // BOLT_ID_REPLACE
 ```
 
 ```ts
 const manifest: PluginManifest = {
-  name: "Bolt UXP", // BOLT_DISPLAYNAME_REPLACE
-  id: "co.bolt.uxp", // BOLT_ID_REPLACE
+  name: "Bolt Project", // BOLT_DISPLAYNAME_REPLACE
+  id: "co.bolt.project", // BOLT_ID_REPLACE
   [...]
 };
 ```

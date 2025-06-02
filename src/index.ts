@@ -9,25 +9,13 @@ import {
   isCancel,
   cancel,
   confirm,
-  note,
   log,
 } from "@clack/prompts";
 import { buildBolt } from "./build";
 
 import { parseArgs } from "./parse-args";
 
-import type {
-  IntroData,
-  ArgOpt,
-  ArgTemplateGeneric,
-  ArgTemplateBoolean,
-  ArgTemplateString,
-  ArgTemplateSelect,
-  ArgTemplateTypes,
-  BaseInfo,
-  BoltInitData,
-  ResArgs,
-} from "./types";
+import type { IntroData, ArgOpt, BoltInitData, ResArgs } from "./types";
 import path from "path";
 import { existsSync } from "fs";
 
