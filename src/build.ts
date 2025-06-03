@@ -136,7 +136,7 @@ export const buildBolt = async (
   if (!args.framework || typeof args.folder !== "string")
     throw Error("Framework not provided");
 
-  const fullPath = path.join(process.cwd(), args.folder);
+  const fullPath = path.join(args.folder);
   note(
     `Creating ${intro.prettyName} in ${color.green(color.bold(fullPath))}`,
     "Info"
