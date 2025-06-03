@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hyper-brew/meta-bolt.git",
+    "url": "git+https://github.com/hyperbrew/meta-bolt.git",
     "directory": "packages/create-vite"
   },
   "dependencies": {
