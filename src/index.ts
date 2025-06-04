@@ -32,7 +32,10 @@ const handleCancel = (value: unknown) => {
   }
 };
 
-export const main = async (initData: BoltInitData) => {
+export const main = async (
+  initData: BoltInitData,
+  overrideArgs: ResArgs = {}
+) => {
   console.clear();
   // console.log({ base: initData.base });
 
@@ -46,7 +49,10 @@ export const main = async (initData: BoltInitData) => {
 
   let promptArgs: ResArgs = {};
   for (const arg of argsTemplate) {
-    if (typeof cliArgs[arg.name] !== "undefined") {
+    if (
+      typeof cliArgs[arg.name] !== "undefined" ||
+      typeof overrideArgs[arg.name] !== "undefined"
+    ) {
       continue;
     }
 
@@ -119,7 +125,7 @@ export const main = async (initData: BoltInitData) => {
     }
   }
 
-  const finalArgs: ResArgs = { ...cliArgs, ...promptArgs };
+  const finalArgs: ResArgs = { ...cliArgs, ...promptArgs, ...overrideArgs };
   // console.log({
   //   cliArgs,
   //   promptArgs,
