@@ -1,10 +1,11 @@
 <img src="meta-bolt-logo.svg" alt="Meta Bolt" title="Meta Bolt" width="400" />
 
-Meta Bolt by Hyper Brew is an underlying framework for many of Hyper Brew's popular frameworks like [Bolt Figma](https://github.com/hyperbrew/bolt-figma) [Bolt CEP](https://github.com/hyperbrew/bolt-cep/), [Bolt Express](https://github.com/hyperbrew/bolt-express/).
+Meta Bolt by Hyper Brew is an underlying framework for many of Hyper Brew's popular frameworks like:
 
-Coming soon:
-
+- [Bolt CEP](https://github.com/hyperbrew/bolt-cep/)
 - [Bolt UXP](https://github.com/hyperbrew/bolt-uxp/)
+- [Bolt Figma](https://github.com/hyperbrew/bolt-figma)
+- [Bolt Express](https://github.com/hyperbrew/bolt-express/)
 
 ![npm](https://img.shields.io/npm/v/meta-bolt)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/hyperbrew/meta-bolt/blob/master/LICENSE)
