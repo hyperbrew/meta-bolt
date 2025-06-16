@@ -9,7 +9,7 @@ import {
   rmdirSync,
   unlinkSync,
 } from "fs";
-import { join } from "path";
+import { basename, join, resolve } from "path";
 import { zipPackage } from "./zip";
 import { parse as parseJSONC } from "jsonc-parser";
 
@@ -26,6 +26,9 @@ type PackageJSON = {
   main: string;
   license: string;
 };
+
+const versionOnly = (str: string) =>
+  str.match(/[0-9]+\.[0-9]+\.[0-9]+/)?.shift() || "";
 
 export const packageSync = () => {
   const basePath = "./"; // Modify this path if your package files are in a different directory
@@ -70,12 +73,84 @@ export const packageSync = () => {
     });
   });
 
+  console.log("\nFramework Package JSON Comparisons");
   Object.keys(warnings).forEach((framework) => {
     console.log(
-      `${framework.charAt(0).toUpperCase() + framework.slice(1)} Warnings`,
+      `- ${framework.charAt(0).toUpperCase() + framework.slice(1)} Warnings`,
       warnings[framework]
     );
   });
+
+  // Verify updated package.json versions
+  console.log("\nVerify Repo Versions Updated");
+  const pluginDir =
+    readdirSync(basePath).find(
+      (name) =>
+        name.startsWith("vite-") &&
+        name.endsWith("-plugin") &&
+        lstatSync(join(basePath, name)).isDirectory()
+    ) || "";
+  const pluginPack = readFileSync(join(pluginDir, "package.json"), "utf-8");
+  const pluginPackJson = JSON.parse(pluginPack) as PackageJSON;
+
+  const createScriptDir =
+    readdirSync(basePath).find(
+      (name) =>
+        name.startsWith("create-bolt-") &&
+        lstatSync(join(basePath, name)).isDirectory()
+    ) || "";
+  const createScriptPack = readFileSync(
+    join(createScriptDir, "package.json"),
+    "utf-8"
+  );
+  const createScriptPackJson = JSON.parse(createScriptPack) as PackageJSON;
+
+  const rootDir = basename(resolve("."));
+
+  const pluginVersion = pluginPackJson.version;
+
+  const rootVersion = packJson.version;
+  const rootDepPlugin = packJson.devDependencies[pluginDir];
+  const rootDepPluginMatches = versionOnly(rootDepPlugin) === pluginVersion;
+
+  const createScriptVersion = createScriptPackJson.version;
+  const createDepRoot = createScriptPackJson.dependencies[rootDir];
+  const createDepRootMatches = versionOnly(createDepRoot) === rootVersion;
+
+  console.log("- ", pluginDir, pluginVersion);
+
+  console.log("- ", rootDir, rootVersion);
+  console.log(
+    `  - ${pluginDir} version: ${rootDepPlugin} ${
+      rootDepPluginMatches ? "✅" : `❌ Update to ${pluginVersion}`
+    }`
+  );
+
+  console.log("- ", createScriptDir, createScriptVersion);
+  console.log(
+    `  - ${rootDir} version: ${createDepRoot} ${
+      createDepRootMatches ? "✅" : `❌ Update to ${rootVersion}`
+    }`
+  );
+  // TODO Test
+  console.log("\nChangelog Update Check");
+
+  const changelogPath = join(basePath, "CHANGELOG.md");
+  if (!existsSync(changelogPath)) {
+    console.warn("- CHANGELOG.md not found. Please create or update it. ❌");
+  } else {
+    const changelogContent = readFileSync(changelogPath, "utf-8");
+    const changelogVersionExists = changelogContent.includes(
+      `Version ${rootVersion}`
+    );
+    if (!changelogVersionExists) {
+      console.warn(
+        `- CHANGELOG.md does not contain Version ${rootVersion} ❌ Please add it.`
+      );
+    } else {
+      console.log(`- CHANGELOG.md contains Version ${rootVersion} ✅`);
+    }
+  }
 };
 
 export const emptyFolder = (folder: string) => {
